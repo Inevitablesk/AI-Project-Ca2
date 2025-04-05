@@ -51,8 +51,6 @@ Firebase: [Link1](https://safarsaathi5.web.app/)  and  [Link2](https://safarsaat
 
 Replit: [Link](https://replit.com/@EshanDas2/Safar-sathi)
 
-# License
 
-MIT
 
-**Free Software, Hell Yeah!**
+
