@@ -2,43 +2,80 @@ import "./plan_page.css";
 import { useState, useEffect } from 'react';
 
 const PlanPage = () => {
-  const [data, setData] = useState([]);
-  const [elements, setElements] = useState([]); // Now using state
-  const loca = "Manali"; // Keeping your original constant
+  const [planData, setPlanData] = useState(null);
+  const [userInputs, setUserInputs] = useState({
+    places: '',
+    days: 3,
+    people: 2,
+    startDate: ''
+  });
 
-  useEffect(() => {
-    fetch("./csvjson.json")
-      .then((response) => response.json())
-      .then((jsonData) => {
-        setData(jsonData);
-        
-        // Temporary array for processing
-        const tempElements = [];
-        
-        // Process matching places
-        jsonData.forEach((entry) => {
-          if (entry.City === loca) {
-            const [nplace1, nplace2] = `${entry.Place} ~ ${entry.Place_desc}`.split("~");
-            tempElements.push(
-              <div key={tempElements.length} className="data-box">
-                <h2>{nplace1.trim()}</h2>
-                <p>{nplace2.trim()}</p>
-                <input
-                  type="checkbox"
-                  className="check"
-                  id={`checkbox${tempElements.length + 1}`}
-                />
+  // Search form component
+  const SearchForm = () => (
+    <div className="search-box">
+      <input 
+        type="text" 
+        placeholder="Places to visit (comma separated)"
+        onChange={(e) => setUserInputs({...userInputs, places: e.target.value})}
+      />
+      <input
+        type="number"
+        placeholder="Number of days"
+        value={userInputs.days}
+        onChange={(e) => setUserInputs({...userInputs, days: e.target.value})}
+      />
+      <button onClick={handleGeneratePlan}>Generate Plan</button>
+    </div>
+  );
+
+  // Plan display component
+  const PlanDisplay = () => (
+    <div className="data-container">
+      {planData?.Days?.map((day, index) => (
+        <div key={index} className="data-box">
+          <h2>Day {index + 1}</h2>
+          <p>{day.activities}</p>
+          <div className="hotel-section">
+            <h3>Hotels</h3>
+            {planData.Hotels?.map((hotel, i) => (
+              <div key={i} className="hotel-card">
+                <span>{hotel.name}</span>
+                <span>Price: ₹{hotel.price}</span>
               </div>
-            );
-          }
-        });
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
-        setElements(tempElements); // Update state once
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, [loca]); // Dependency array remains
+  // Handle plan generation
+  const handleGeneratePlan = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/generate-plan', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(userInputs)
+      });
+      
+      const data = await response.json();
+      setPlanData(data);
+      
+    } catch (error) {
+      console.error("Planning failed:", error);
+    }
+  };
 
-  return <div className="data-container">{elements}</div>;
+  return (
+    <div className="plan-page-container">
+      <SearchForm />
+      {planData ? <PlanDisplay /> : (
+        <div className="default-message">
+          <p>Enter your travel details to generate a personalized plan!</p>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default PlanPage;
