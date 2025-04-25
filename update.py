@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("MY_SECRET_KEY")) 
+genai.configure(api_key=os.getenv("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")) 
 
 # Set up the model
 generation_config = {
