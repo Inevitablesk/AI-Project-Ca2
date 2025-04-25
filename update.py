@@ -4,42 +4,66 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-genai.configure(api_key=os.getenv("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" ))  # Use a valid API key
 
-# Model configuration (unchanged)
-generation_config = { ... }
-safety_settings = [ ... ]
-model = genai.GenerativeModel(...)
+genai.configure(api_key=os.getenv("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")) 
+
+# Set up the model (keep original config)
+generation_config = {
+  "temperature": 0.9,
+  "top_p": 1,
+  "top_k": 1,
+  "max_output_tokens": 2048,
+}
+
+safety_settings = [
+  {
+    "category": "HARM_CATEGORY_HARASSMENT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+  },
+  {
+    "category": "HARM_CATEGORY_HATE_SPEECH",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+  },
+  {
+    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+  },
+  {
+    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+  }
+]
+
+model = genai.GenerativeModel(model_name="gemini-pro",
+                              generation_config=generation_config,
+                              safety_settings=safety_settings)
 
 def is_trip_related(query):
-    """Use AI to check if the input is trip-related."""
-    prompt = f'''Is the following input related to travel, tourism, or trip planning? 
-    Answer ONLY 'YES' or 'NO'. Input: "{query}"'''
+    """Check if input is trip-related using AI"""
+    prompt = f'''Is this query about travel/tourism? Answer ONLY YES/NO: "{query}"'''
     response = model.generate_content(prompt)
     return "YES" in response.text.upper()
 
 # Get user inputs
-days = input("Enter the number of days for your trip: ")
-dest = input("Enter the places you want to visit: ")
+x = input("Enter the number of days for your trip : ")
+dest = input("Enter the places you want to visit : ")
 
-# Check if input is trip-related
+# Handle non-trip queries
 if not is_trip_related(dest):
-    print("If you want to ask any information except trip-related, kindly go to Chat GPT, Google, Gemini, Perplexity, etc. Use me only for trip-related guidance.")
+    print("If you want to ask any information Except trip related Kindly go to Chat GPT, Google, Gemini, Perplexity, E.T.C, use me only for trip related guidance")
 else:
-    # Enhanced prompt for itinerary, hotels, and transport
-    prompt = f'''
-    Create a {days}-day itinerary for {dest}. Include:
-    1. Safe and beautiful places with moderate activities.
-    2. Contact details of the local Tourism Development Corporation.
-    3. A list of 10 hotels sorted from cheap to expensive (include approximate prices).
-    4. Transportation suggestions (prioritize metro if available, then Rapido, then cabs).
+    # Enhanced prompt with hotels and transportation
+    prompt_parts = f'''Create a {x}-day itinerary for {dest}. Include:
+    1. Safe, beautiful places with moderate activities
+    2. Tourism Development Corporation contact details
+    3. 10 hotels sorted cheap to expensive with approximate prices
+    4. Transportation hierarchy (metro > Rapido > cabs)
     
-    Format the output as JSON with keys: Days, Contact, Hotels, Transportation.
-    '''
-    
-    response = model.generate_content(prompt)
-    
-    # Save and print response
-    with open("output.json", "w") as f:
-        json.dump(response.text, f)
+    Format output as JSON with these keys: Days, Contact, Hotels, Transportation'''
+
+    response = model.generate_content(prompt_parts)
+
+    # Save and display results
+    with open("output.json", 'w') as json_file:
+        json.dump(response.text, json_file)
     print(response.text)
